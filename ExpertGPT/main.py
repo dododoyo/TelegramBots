@@ -1,13 +1,17 @@
 import csv
+import os
+from dotenv import load_dotenv
 import telebot
+# pyTelegramBotAPI version 4.14.0
+load_dotenv()
 
 # Open and read the CSV file containing the prompts
 with open('prompts.csv', 'r',encoding='utf-8') as file:
     reader = csv.reader(file)
     prompts_dict = {row[0]: row[1] for row in reader}
 
-TOKEN = "6253417027:AAGOHUh2cR9VXbkIgplYmZd4ZT6en2oFzGU"
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
+
 @bot.message_handler(commands=['start'])
 def send_menu(message):
     with open('welcome.gif','rb') as image_file:
@@ -22,8 +26,6 @@ def send_menu(message):
 
     # Send the menu to the user
     bot.send_message(message.chat.id, '*Select an expert to get started:*', reply_markup=menu_markup,parse_mode='Markdown')
-
-
 
 # Define a handler function to handle user prompt selections
 @bot.message_handler(func=lambda message: message.text in prompts_dict.keys())
@@ -41,16 +43,11 @@ def handle_prompt_selection(message):
     bot.send_message(message.chat.id, selected_prompt, parse_mode = 'Markdown')
     print(f'User: {message.chat.id} | Selected: {selected_name}')
 
-
-
-
-# Run the bot continuously
-if __name__=='__main__':
-    while True:
-        try:
-            print('bot is running . . .')
-            bot.polling(non_stop=True, interval=0)
-            
-        except Exception as e:
-            print('An error occured')
-            print(e)
+while True:
+    try:
+        print('bot is running . . .')
+        bot.polling()
+        
+    except Exception as e:
+        print('An error occured')
+        print(e)

@@ -1,0 +1,4 @@
+.env
+botenv/
+AvailableTester.py
+gptTester.py
