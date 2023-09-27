@@ -30,13 +30,15 @@ bot.start((ctx) => {
 bot.launch();
 ```
 
-6. Save the code to a file called `bot.js` (or any other name you prefer). Then, run the following command in your terminal to start your bot:
+6. Save the code to a file called `bot.js` (or any other name you prefer). Then, run the following command in your terminal to start your bot: 
+
+7. To find alternative way of creating the bot scaffolding checkout [create-bot](https://github.com/telegraf/create-bot)  (**optional**)
 
 ```
 node bot.js
 ```
 
-7. Now that your bot is running, you can test it out by sending a message to your bot on Telegram. Type "/start" to start the bot and "/help" to see the available commands.
+1. Now that your bot is running, you can test it out by sending a message to your bot on Telegram. Type "/start" to start the bot and "/help" to see the available commands.
 
 That's it! You've now created a Telegram bot using `telegraf.js`. From here, you can continue to build out your bot by adding more commands and functionality.
 
@@ -92,7 +94,7 @@ bot.launch();
 ```
 
 
-## `ctx`
+##  What is `ctx` ?
 
 `ctx` stands for "context" and it's an object that contains information about the current message and the user who sent it. Think of it like a messenger who delivers a message to you, but also tells you who sent it and some other details about it.
 
@@ -111,7 +113,69 @@ Most commonly used properties of the `ctx` object include:
 - `ctx.message`: An object that contains information about the message that was sent, such as the message ID, text, and date.
 
 
+### Why use ctx ?
 
+While it is possible to use the `telegram.sendMessage` method to send messages directly, using the `ctx` object provides several advantages:
+
+1. **Access to context information:** The `ctx` object contains information about the user, the message, and the chat, which can be useful for creating more complex and personalized bots. For example, you might use the `ctx` object to access the user's name, ID, or language preferences.
+
+2. **Middleware architecture:** `telegraf.js` uses a middleware architecture that allows you to create a sequence of functions that can handle events triggered by the bot. Each middleware function can modify the `ctx` object before passing control to the next function, which allows you to create powerful and flexible bots.
+
+3. **Built-in methods:** The `ctx` object provides several built-in methods for sending messages, editing messages, and interacting with the Telegram API. These methods are designed to work seamlessly with the middleware architecture and provide a convenient and consistent way to interact with the Telegram API.they are a from of a shortcut.
+
+<center>
+
+| ctx shortcut | longer version|
+| :------------: | :-------------: |
+|addStickerToSet	|telegram.addStickerToSet |
+|deleteMessage	|telegram.deleteMessage|
+|forwardMessage	|telegram.forwardMessage|
+| leaveChat |	telegram.leaveChat|
+| reply |	telegram.sendMessage|
+| replyWithAudio |	telegram.sendAudio|
+
+</center>
+
+### Shortcuts usage example 
+
+```javascript
+const bot = new Telegraf(process.env.BOT_TOKEN)
+
+bot.command('quit', (ctx) => {
+  // Explicit usage
+  bot.telegram.leaveChat(ctx.message.chat.id)
+
+  // Using context shortcut
+  ctx.leaveChat()
+})
+
+bot.on('text', (ctx) => {
+  // Explicit usage
+  bot.telegram.sendMessage(ctx.message.chat.id, `Hello ${ctx.state.role}`)
+
+  // Using context shortcut
+  ctx.reply(`Hello ${ctx.state.role}`)
+})
+
+bot.on('callback_query', (ctx) => {
+  // Explicit usage
+  bot.telegram.answerCbQuery(ctx.callbackQuery.id)
+
+  // Using context shortcut
+  ctx.answerCbQuery()
+})
+
+bot.on('inline_query', (ctx) => {
+  const result = []
+  // Explicit usage
+  bot.telegram.answerInlineQuery(ctx.inlineQuery.id, result)
+
+  // Using context shortcut
+  ctx.answerInlineQuery(result)
+})
+
+bot.launch()
+```
 
 <br>
 
@@ -274,6 +338,10 @@ In this example, the `bot.entity` method is called with the "hashtag" type and a
 
 Overall, the `bot.entity` method can be a useful tool for extracting specific pieces of information from a message, such as usernames, hashtags, or URLs.
 
+> ***Related to entity***  [mention,](https://telegrafjs.org/#/?id=mention)
+[phone,](https://telegrafjs.org/#/?id=phone)
+[hashtag](https://telegrafjs.org/#/?id=hashtag)
+
 ## MiddleWare Functions 
 
 In `telegraf.js`, middleware functions are used to add extra functionality to the bot. Middleware functions are functions that take three arguments: `ctx`, `next`, and `...args`. 
@@ -290,10 +358,10 @@ For example, here's a simple middleware function that logs information about eac
 
 ```javascript
 bot.use((ctx, next) => {
+  console.log(ctx.update);
   next();
 });
 ```
-
 In this example, the middleware function logs information about each update to the console using `console.log`. The `next` function is then called to continue processing the update.
 
 ***What is the difference between Middleware functions and callback functions ?***
@@ -304,7 +372,7 @@ Middleware functions and callback functions are both used in JavaScript to add e
 
 **Middleware functions,** on the other hand, are functions that are executed in between other functions or processes. Middleware functions are often used in web development to add extra functionality to a web application, such as logging, authentication, or error handling.
 
-## next()
+## `next` method
 
 In `telegraf.js`, the `next` function is used to pass control to the next middleware function in the sequence. Middleware functions are functions that are executed in a sequence, and each function can modify the `ctx` object before passing control to the next function. 
 
@@ -338,7 +406,7 @@ The second middleware function is executed only if the first middleware function
 
 By calling the `next` function in the first middleware function, we ensure that control is passed to the second middleware function if the message is not "hello". This allows us to create a sequence of middleware functions that can handle different scenarios and modify the `ctx` object before passing control to the next function.
 
-## use method
+## `use` method
 
 In `telegraf.js`, the `use()` method is used to register middleware functions that can handle events triggered by the bot. Middleware functions are functions that are executed in a sequence, and each function can modify the `ctx` object before passing control to the next function.
 
@@ -378,4 +446,44 @@ The `on()` method is used to register an event handler for the `text` event. Whe
 
 By using the `use()` method to register middleware functions, we can create a sequence of functions that can handle events triggered by the bot. Each middleware function can modify the `ctx` object before passing control to the next function, which allows us to create powerful and flexible bots.
 
-# State
+> Note that while it is possible to access the modified `ctx.state` object without passing the `ctx` argument to the `next()` method, it is generally considered good practice to pass the `ctx` argument to ensure that the next middleware function has access to the full context object.
+
+```javascript
+next();
+next(ctx);
+// both serve the same purpose.
+```
+
+# [`state`](https://telegrafjs.org/#/?id=state)
+
+In `telegraf.js`, the `ctx.state` object is a property of the context object (`ctx`) that is used to store and retrieve state data across multiple middleware functions. 
+
+The `ctx.state` object is an empty object by default, but you can add properties to it to store data that needs to be shared across multiple middleware functions. For example, you might use the `ctx.state` object to store user-specific data that needs to be accessed by multiple middleware functions.
+
+Here's an example to illustrate the use of the `ctx.state` object:
+
+```javascript
+bot.use((ctx, next) => {
+  // Set a property on the ctx.state object
+  ctx.state.user = {
+    id: ctx.from.id,
+    name: ctx.from.first_name,
+    last_name: ctx.from.last_name
+  };
+  next();
+});
+
+bot.on('text', (ctx) => {
+  // Access the property on the ctx.state object
+  const user = ctx.state.user;
+  ctx.reply(`Hello, ${user.name} ${user.last_name}!`);
+});
+
+bot.launch();
+```
+
+In this example, we use the `use()` method to register a middleware function that sets a property on the `ctx.state` object. The property is an object that contains information about the user who sent the message, such as their ID, first name, and last name.
+
+We then use the `on()` method to register an event handler for the `text` event. The event handler accesses the property on the `ctx.state` object and sends a reply to the user with a personalized greeting.
+
+By using the `ctx.state` object to store user-specific data, we can share this data across multiple middleware functions and create more complex and personalized bots.

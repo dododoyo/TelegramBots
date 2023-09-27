@@ -11,8 +11,21 @@ TELEGRAM_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(TELEGRAM_TOKEN);
 
 bot.use((ctx, next) => {
+  // Set a property on the ctx.state object
   console.log(ctx.update);
+  ctx.state.user = {
+    id: ctx.from.id,
+    name: ctx.from.first_name,
+    age :23,
+  };
   next();
+});
+
+bot.on("text", (ctx) => {
+  // Access the property on the ctx.state object
+  const user = ctx.state.user;
+  ctx.reply(`Hello, ${user.name}!`);
+  ctx.reply(`You are ${user.age} years old.`)
 });
 
 bot.start((ctx) => {
@@ -36,10 +49,6 @@ bot.command(['greet','Great'],(ctx) => {
   greetUser(ctx); 
 })
 
-bot.on('text', (ctx,next) => {
-  ctx.reply(ctx.message.text);
-  next()
-})
 bot.entity("hashtag", (ctx) => {
   const userText = ctx.message.text;
   const entities = ctx.message.entities;
