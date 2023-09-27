@@ -3,10 +3,23 @@ import os
 from dotenv import load_dotenv
 import telebot
 # pyTelegramBotAPI version 4.14.0
+import g4f,asyncio
+
+
+async def ask_AI(question):
+    try:
+        response = await g4f.Provider.You.create_async(
+            model=g4f.models.default.name,
+            messages=[{"role": "user", "content": question}],
+        )
+        return response
+    except Exception as e:
+        print("Error :", e)
+
 load_dotenv()
 
 # Open and read the CSV file containing the prompts
-with open('prompts.csv', 'r',encoding='utf-8') as file:
+with open('newPrompts.csv', 'r',encoding='utf-8') as file:
     reader = csv.reader(file)
     prompts_dict = {row[0]: row[1] for row in reader}
 
@@ -17,7 +30,8 @@ def send_menu(message):
     with open('welcome.gif','rb') as image_file:
         welcome_caption = """*Hello there, and Welcome. \nI generate different prompts for ChatGPT.* """
         bot.send_animation(message.chat.id,image_file,caption=welcome_caption,parse_mode='Markdown')
-        print(f'User {message.chat.id} connected.')
+        # print(message.chat)
+        print(f'User @{message.chat.username} connected.')
     # Create the menu as a markup object with each name as a button
     menu_markup = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     for name in sorted(prompts_dict.keys()):
@@ -38,16 +52,36 @@ def handle_prompt_selection(message):
         selected_prompt = 'Sorry I can\'t provide answers for the provided command.'
 
     selected_prompt = '`' + selected_prompt+'`'
-    # Send the prompt to the user along with the 'Copy  Prompt' button
-    bot.send_message(message.chat.id,'*Tap the message to copy*', parse_mode = 'Markdown')
-    bot.send_message(message.chat.id, selected_prompt, parse_mode = 'Markdown')
-    print(f'User: {message.chat.id} | Selected: {selected_name}')
 
-while True:
-    try:
-        print('bot is running . . .')
-        bot.polling()
-        
-    except Exception as e:
-        print('An error occured')
-        print(e)
+    # Send the prompt to the user along with the 'Copy  Prompt' button
+    bot.send_message(message.chat.id,'Prompt send to AI is')
+    bot.reply_to(message,selected_prompt,parse_mode = 'Markdown')
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_message(message.chat.id,"My reply to your first request is");
+
+    AIResponse = asyncio.run(ask_AI(selected_prompt))
+    bot.send_chat_action(message.chat.id, 'typing')
+
+    bot.reply_to(message, AIResponse, parse_mode = 'Markdown')
+    # bot.reply_to(message, AIResponse);
+
+    print(f'User @{message.chat.username} | Selected: {selected_name}')
+
+@bot.message_handler(func=lambda message: True)
+def handle_text(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.send_chat_action(message.chat.id, 'typing')
+    bot.reply_to(message, "Thinking")
+    AIResponse = asyncio.run(ask_AI(message.text))
+
+    bot.reply_to(message, AIResponse, parse_mode = 'Markdown')
+    # bot.reply_to(message, AIResponse)
+
+
+try:
+    print('bot is running . . .')
+    bot.polling()
+    
+except Exception as e:
+    print('An error ocurred ', end='')
+    print(e)
