@@ -66,3 +66,5 @@ When you are finished using the virtual environment, you can deactivate it by ty
 deactivate
 ```
 This will deactivate the virtual environment and return you to the system's default Python environment.
+
+`nodemon --exec python3 main.py`
