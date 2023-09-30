@@ -4,6 +4,8 @@ const Telegraf = require("telegraf");
 const axios = require("axios");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const pexels = require("pexels");
+const fs = require("fs");
+const { log } = require("console");
 
 const client = pexels.createClient(process.env.IMG_API_TOKEN);
 
@@ -16,25 +18,22 @@ Use /help for more information`;
 });
 
 bot.help((ctx) => {
-  const message = `
-Available commands:
+const message = `
+Here are some of the commands you can use:
 
-/start - Start the bot.
+- /start - Start the bot.
+- /kanye - Get a random Kanye-West quote.
+- /fortune - Get a virtual fortune cookie. 
+- /joke - Get a random joke.
+- /photo - Get a picture based on your query. This will ask you to enter a query, such as "a cat" or "a mountain", and then send you a picture related to your query.
+- /weather - Get current weather conditions. This will ask you to share your current location and then send you the current weather conditions for that location, such as temperature, humidity, wind speed, etc.
+- /country - Get info about a country based on your query. This will ask you to enter the name of a country, such as "China" or "Brazil", and then send you some information about that country, such as capital, population, currency, etc.
+- /dogs - Get dog breeds. This will send you a list of dog breeds, and then ask you to choose one. After you choose one, it will send you a picture and some information about that dog breed.
+- /help - Show this help message. This will show you the list of commands and their descriptions again.
 
-/kanye - Get a random Kanye-West quote.
-
-/fortune - Get a virtual fortune cookie.
-
-/joke - Get a random joke.
-
-/photo - Get a picture based on your query.
-
-/weather - Get current weather conditions.
-
-/country <name> - Get a info about a country based on your query.
-
-/help - Show this help message.
+This bot is designed to entertain and inform you. You can use this bot anytime and anywhere. Have fun with this bot! 😊
 `;
+
   ctx.reply(message);
 });
 
@@ -148,7 +147,7 @@ ${country.timezones.length === 1 ? "Timezone" : "Timezones"} : ${
 });
 
 bot.command(["weather", "Weather"], (ctx) => {
-  ctx.reply("Please share your live location", {
+  ctx.reply("Please share your location", {
     reply_to_message_id: ctx.message.message_id,
   });
 
@@ -278,4 +277,47 @@ bot.command(["joke", "Joke"], (ctx) => {
     });
 });
 
-bot.launch();
+  bot.command("dogbreeds", (ctx) => {
+    const data = fs.readFileSync("./dogbreeds.json", "utf-8")
+    const breeds = JSON.parse(data);
+
+    let msg = "Dog Breeds:\n"
+
+    breeds.forEach((eachBreed) => {
+      msg +=  `-${eachBreed}\n` 
+    })
+    ctx.reply(msg);
+  })
+
+  bot.command(["NEWS","News","news"], (ctx) => {
+    try {
+      axios.get(process.env.NEWS_PROVIDER).then((response) => {
+        // console.log(response);
+        console.log(response.statusText);
+        if (response.statusText === "OK")
+        {
+          
+          console.log(response.articles);
+        }
+        else{
+          ctx.reply("Something went wrong try again")
+        }
+      })
+    } catch (err) {
+      console.log(err);
+    }
+  })
+
+  function startBot() {
+    try {
+      bot.launch();
+      console.log('Bot is running and live');
+    } catch (err) {
+      console.log(err);
+      console.log('Restarting bot...');
+      startBot();
+    }
+  }
+
+  startBot();
+

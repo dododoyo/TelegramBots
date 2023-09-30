@@ -12,7 +12,7 @@ message_queue = queue.Queue()
 
 async def ask_AI(question):
     try:
-        response = await g4f.Provider.DeepAi.create_async(
+        response = await g4f.Provider.You.create_async(
             model=g4f.models.default.name,
             messages=[{"role": "user", "content": question}],
         )
@@ -48,7 +48,7 @@ def send_menu(message):
 def show_thinking(message):
     # Send a message to the user
     sent_message = bot.reply_to(message, 'Thinking')
-    for i in range(2):
+    for i in range(5):
         thinkMessage = 'Thinking'
         for i in range(5):
             thinkMessage += ' . '
@@ -129,7 +129,6 @@ def handle_text(message):
     # Start a new thread to handle the "Thinking" animation
     thinking_thread = threading.Thread(target=show_thinking, args=(message,))
     thinking_thread.start()
-
     # Start a new thread to fetch the AI's response
     ai_thread = threading.Thread(target=fetch_ai_response, args=(message,))
     ai_thread.start()
