@@ -149,7 +149,7 @@ ${country.timezones.length === 1 ? "Timezone" : "Timezones"} : ${
 bot.command(["weather", "Weather"], (ctx) => {
   ctx.reply("Please share your location", {
     reply_to_message_id: ctx.message.message_id,
-  });
+    reply_markup:{keyboard:[[{text:"Share Location",request_location:true}]]}});
 
   bot.on("location", (ctx) => {
     const latitude = ctx.message.location.latitude;
@@ -250,32 +250,51 @@ bot.command(["fortune", "Fortune"], (ctx) => {
     });
 });
 bot.command(["joke", "Joke"], (ctx) => {
-  ctx.reply("Here is a random Joke.");
-  axios
-    .get(process.env.JOKE_PROVIDER)
-    .then(function (response) {
-      // handle success
+  inline_menu = [
+    [{ text: "Any", callback_data: "Any" }],
+    [
+      { text: "Programming", callback_data: "Programming" },
+      { text: "Dark", callback_data: "Dark" },
+    ],
+    [
+      { text: "Miscellaneous", callback_data: "Miscellaneous" },
+      { text: "Pun", callback_data: "Pun" },
+    ],
+    [
+      { text: "Spooky", callback_data: "Spooky" },
+      { text: "Christmas", callback_data: "Christmas" },
+    ],
+  ];
 
-      if (response.data.type === "twopart") {
-        ctx.reply(response.data.setup);
-        // Pause the program for 1.5 seconds
-        setTimeout(function () {
-          ctx.reply(response.data.delivery);
-        }, 2000);
-      } else {
-        ctx.reply(response.data.joke);
-      }
-      // console.log(response.data);
-      // console.log(response.data.type);
-    })
-    .catch(function (error) {
-      // handle error
-      console.log(error);
-    })
-    .finally(function () {
-      // always executed
-    });
+  ctx.reply("PLEASE SELECT  A CATEGORY",{reply_markup:{inline_keyboard:inline_menu}})
 });
+
+  bot.action(["Any","Miscellaneous","Dark","Pun","Spooky","Christmas","Programming"], async (ctx) => {
+    ctx.answerCbQuery("Sending Joke")
+    let menu = ctx;
+    // console.log(ctx.match);
+
+    try {
+      response = await axios.get(process.env.JOKE_PROVIDER+ctx.match);
+        // handle success
+
+        if (response.data.type === "twopart") {
+          ctx.reply(response.data.setup);
+          // Pause the program for 1.5 seconds
+          setTimeout(function () {
+            ctx.reply(response.data.delivery);
+          }, 4000);
+        } else {
+          ctx.reply(response.data.joke);
+        }
+        
+        menu.deleteMessage();
+        // console.log(response.data);
+        // console.log(response.data.type);
+      } catch (err) {
+      console.log(err);
+    }
+  })
 
   bot.command("dogbreeds", (ctx) => {
     const data = fs.readFileSync("./dogbreeds.json", "utf-8")
