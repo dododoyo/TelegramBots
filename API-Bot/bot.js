@@ -20,6 +20,9 @@ picture_command(bot);
 const weather_command = require("./src/commands/weather.js")
 weather_command(bot);
 
+const news_command = require("./src/commands/news.js")
+news_command(bot);
+
 
 function startBot() {
   try {
