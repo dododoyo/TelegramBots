@@ -13,9 +13,72 @@ module.exports = (bot) => {
     });
   };
 
+W  const onLocationOpenMap = (ctx) => {
+    // Weather API logic here
+    // console.log("Location Recieved");
+    const latitude = ctx.message.location.latitude;
+    const longitude = ctx.message.location.longitude;
+    const apiKey = process.env.WEATHER_API_KEY;
+    const apiProvider = process.env.WEATHER_API;
+
+    const apiCall = `${apiProvider}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+
+    try {
+      axios
+        .get(apiCall)
+        .then((response) => {
+          // console.log(response);
+          // console.log(response.data);
+          const { name, weather, main, wind, clouds, dt } = response.data;
+          const descriptiveWeather = weather[0].description;
+          const mainWeather = weather[0].main;
+          const temperature = main.temp;
+          const feelsLike = main.feels_like;
+          const humidity = main.humidity;
+          const windSpeed = wind.speed;
+          const windDirection = wind.deg;
+          const cloudiness = clouds.all;
+          // Convert Unix timestamp to human-readable date and time
+          const date = new Date(dt * 1000);
+          const formattedDate = date.toLocaleDateString();
+          const formattedTime = date.toLocaleTimeString();
+          const message = `The weather in ${name} is currently ${mainWeather} (${descriptiveWeather}) 
+
+With a temperature of ${temperature}°C
+
+Human perception (feels like ${feelsLike}°C)
+
+Humidity is ${humidity}%
+
+Date : ${formattedDate}
+
+Time : ${formattedTime}
+
+Cloudiness is ${cloudiness}%
+
+Wind speed of ${windSpeed} m/s and wind direction of ${windDirection}°.`;
+          ctx.reply(message, {
+            reply_markup: { remove_keyboard: true },
+          });
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  bot.on("location:open_map",onLocationOpenMap);
+
   bot.command(["weather", "Weather"], (ctx) => {
     main_page(ctx);
 
+    /***********************
+     * SETUP ACTION FOR EACH BUTTON
+     * **********************/
+
+    // ACTION FOR ACCU-WEATHER
     bot.action("accu", (ctx) => {
       ctx.answerCbQuery();
       ctx.deleteMessage();
@@ -31,12 +94,7 @@ module.exports = (bot) => {
       });
     });
 
-    bot.action("go_back", (ctx) => {
-      ctx.answerCbQuery();
-      ctx.deleteMessage();
-      main_page(ctx);
-    });
-
+    // ACTION FOR OPEN MAP
     bot.action("open_map", (ctx) => {
       ctx.answerCbQuery();
       ctx.deleteMessage();
@@ -50,77 +108,7 @@ module.exports = (bot) => {
       });
     });
 
-    bot.action("openMap_current", (ctx) => {
-      ctx.answerCbQuery();
-      ctx.deleteMessage();
-      let message = `Please share your location and
-
-Make sure location is <b>ON</b>
-
-Sharing location may take time`;
-      ctx.reply(message, {
-        parse_mode: "HTML",
-        reply_markup: {
-          keyboard: [[{ text: "Share Location", request_location: true }]],
-        },
-      });
-
-      bot.on("location", (ctx) => {
-        // console.log("Location Recieved");
-        const latitude = ctx.message.location.latitude;
-        const longitude = ctx.message.location.longitude;
-        const apiKey = process.env.WEATHER_API_KEY;
-        const apiProvider = process.env.WEATHER_API_PROVIDER;
-
-        const apiCall = `${apiProvider}?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
-
-        try {
-          axios
-            .get(apiCall)
-            .then((response) => {
-              // console.log(response);
-              // console.log(response.data);
-              const { name, weather, main, wind, clouds, dt } = response.data;
-              const descriptiveWeather = weather[0].description;
-              const mainWeather = weather[0].main;
-              const temperature = main.temp;
-              const feelsLike = main.feels_like;
-              const humidity = main.humidity;
-              const windSpeed = wind.speed;
-              const windDirection = wind.deg;
-              const cloudiness = clouds.all;
-              // Convert Unix timestamp to human-readable date and time
-              const date = new Date(dt * 1000);
-              const formattedDate = date.toLocaleDateString();
-              const formattedTime = date.toLocaleTimeString();
-              const message = `The weather in ${name} is currently ${mainWeather} (${descriptiveWeather}) 
-
-With a temperature of ${temperature}°C
-
-Human perception (feels like ${feelsLike}°C)
-
-Humidity is ${humidity}%
-
-Date : ${formattedDate}
-
-Time : ${formattedTime}
-
-Cloudiness is ${cloudiness}%
-
-Wind speed of ${windSpeed} m/s and wind direction of ${windDirection}°.`;
-              ctx.reply(message, {
-                reply_markup: { remove_keyboard: true },
-              });
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
-        } catch (err) {
-          console.log(err);
-        }
-      });
-    });
-
+    // ACTION FOR WEATHER API
     bot.action("weather_api", (ctx) => {
       ctx.answerCbQuery();
       ctx.deleteMessage();
@@ -142,7 +130,39 @@ Wind speed of ${windSpeed} m/s and wind direction of ${windDirection}°.`;
       });
     });
 
-    bot.action("weather_api_astro", (ctx) => {//ad go back for this also
+    // ACTION FOR GO-BACK
+    bot.action("go_back", (ctx) => {
+      ctx.answerCbQuery();
+      ctx.deleteMessage();
+      main_page(ctx);
+    });
+
+    // ACTION HANDLER FOR CURRENT WEATHER DATA WITH OPEN_WEATHER_MAP
+    bot.action("openMap_current", (ctx) => {
+      ctx.answerCbQuery();
+      ctx.deleteMessage();
+      let message = `Please share your location and
+
+Make sure location is <b>ON</b>
+
+Sharing location may take time`;
+      ctx.reply(message, {
+        parse_mode: "HTML",
+        reply_markup: {
+          keyboard: [[{ text: "Share Location", request_location: true }]],
+          one_time_keyboard: true,
+        },
+      });
+
+      
+      bot.on("location", (ctx) => {
+        onLocationOpenMap(ctx);
+      });
+    });
+
+    // ACTION HANDLER FOR ASTRONOMY DATA WITH WEATHER_API
+    bot.action("weather_api_astro", (ctx) => {
+      //ad go back for this also
       ctx.answerCbQuery();
       ctx.deleteMessage();
       let message = `Please share your location and
@@ -169,6 +189,8 @@ Sharing location may take time`;
         console.log(response.data);
       });
     });
+
+    // ACTION HANDLER FOR FORECAST DATA WITH WEATHER_API
     bot.action("weather_api_forecast", (ctx) => {
       ctx.answerCbQuery();
       ctx.deleteMessage();
@@ -180,26 +202,26 @@ Sharing location may take time`;
       ctx.reply(message, {
         parse_mode: "HTML",
         reply_markup: {
-          keyboard: [[{ text: "Share Location", request_location: true }]],
+          keyboard: [
+            [
+              {
+                text: "Share Location",
+                request_location: true,
+              },
+            ],
+          ],
+          one_time_keyboard: true,
         },
       });
 
-
       bot.on("location", async (ctx) => {
         //not finished for each hour
-        // console.log("Location Recieved");
         const latitude = ctx.message.location.latitude;
         const longitude = ctx.message.location.longitude;
 
         const apiCall = `${process.env.WEATHER_API}forecast${process.env.WEATHER_API_KEY}&q=${latitude},${longitude}`;
-
-        // console.log(apiCall);
-
-        // Show typing on top of chat
         ctx.replyWithChatAction("typing");
-        
         const response = await axios(apiCall);
-        // console.log(response.data.forecast.forecastday[0]);
         let tomorrow = response.data.forecast.forecastday[0].date;
         let hours = response.data.forecast.forecastday[0].hour;
         let {
@@ -217,7 +239,7 @@ Sharing location may take time`;
         // console.log(tomorrow);
         // console.log(condition);
         // console.log(hours);
-        const message = `The average weather condition of tomorrow is ${condition.text}
+        const message = `The average weather condition for ${tomorrow} is ${condition.text}
 
 Maximum Temperature : ${maxtemp_c}°C
 
@@ -235,15 +257,30 @@ Maximum Wind Speed: ${maxwind_mph} mph
 
 UV Index : ${uv}`;
 
-        ctx.reply(message, {
-          reply_markup: { remove_keyboard: true },
+        ctx.reply(message);
+        // , {reply_markup: { remove_keyboard: true },}
+        ctx.reply("<b>CLICK TO FIND DETAILS</b>", {
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Get Details", callback_data: "detail_forecast" }],
+            ],
+          },
         });
       });
     });
 
+    // ACTION HANDLER TO GET DETAIL FORECAST DATA WITH WEATHER_API
+    bot.action("detail_forecast", (ctx) => {
+      ctx.answerCbQuery();
+      console.log("Received Request");
+    });
+
+    // ACTION HANDLER TO GET CURRENT WEATHER DATA FROM WEATHER_API
     bot.action("weather_api_current", (ctx) => {
       ctx.answerCbQuery();
       ctx.deleteMessage();
+
       let message = `Please share your location and
 
 Make sure location is <b>ON</b>
@@ -298,7 +335,7 @@ Humidity is ${humidity}%
 
 Time : ${time}(24H-format), ${is_day ? "It's day time" : "It's night time"}
 
-Date : ${time}
+Date : ${date}
 
 Cloudiness is ${cloudiness}%
 
