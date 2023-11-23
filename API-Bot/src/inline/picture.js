@@ -1,12 +1,13 @@
 const axios = require("axios");
 const pexels = require("pexels");
-
 const client = pexels.createClient(process.env.PEXELS_API_TOKEN);
 
 module.exports = (bot) => {
-  bot.command(["picture", "Picture"], (ctx) => {
-    let message = `**PLEASE SELECT DOMAIN**`;
-    ctx.reply(message, {
+  bot.command(["picture", "Picture"], async (ctx) => {
+    let message = `PLEASE SELECT <b>DOMAIN</b>
+
+And enter your Search on <b>Inline Mode</b> after domain name`;
+    await ctx.reply(message, {
       reply_markup: {
         inline_keyboard: [
           [
@@ -23,7 +24,7 @@ module.exports = (bot) => {
           ],
         ],
       },
-      parse_mode: "Markdown",
+      parse_mode: "HTML",
     });
   });
 
@@ -50,7 +51,7 @@ module.exports = (bot) => {
     });
     // console.log(pictures);
 
-    ctx.answerInlineQuery(pictures);
+    await ctx.answerInlineQuery(pictures);
   });
 
   bot.inlineQuery(/pexels\s.+/, async (ctx) => {
@@ -58,8 +59,6 @@ module.exports = (bot) => {
     let input = ctx.inlineQuery.query.split(" ");
     input.shift();
     let query = input.join(" ");
-
-    // console.log(query);
 
     try {
       let response = await client.photos.search({
@@ -85,11 +84,10 @@ module.exports = (bot) => {
       });
       // console.log(pictures);
 
-      ctx.answerInlineQuery(pictures);
+      await ctx.answerInlineQuery(pictures);
     } catch (err) {
       console.log("Something Went Wrong");
       console.log(err);
-
     }
   });
 };

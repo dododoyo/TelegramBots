@@ -2,6 +2,7 @@ const axios = require("axios");
 const reddit_jokes = require("../../reddit_jokes.json");
 const stupidStuff_jokes = require("../../stupidstuff.json");
 const wocka_jokes = require("../../wocka.json");
+
 const joke_providers = new Map([
   ["stupid", stupidStuff_jokes],
   ["wocka", wocka_jokes],
@@ -14,62 +15,28 @@ module.exports = (bot) => {
       [{ text: "Stupid Stuff", callback_data: "stupid" }],
       [{ text: "Wocka", callback_data: "wocka" }],
     ];
-    ctx.reply("SELECT JOKE PROVIDER", {
-      reply_markup: {inline_keyboard: inline_menu},
+    await ctx.reply("SELECT JOKE PROVIDER", {
+      reply_markup: { inline_keyboard: inline_menu },
       reply_to_message_id: ctx.message.message_id,
     });
 
-    bot.action("reddit", (ctx) => {
-      ctx.answerCbQuery();
+    bot.action("reddit", async (ctx) => {
+      await ctx.answerCbQuery("Selected Reddit");
       let random_index = Math.floor(Math.random() * 194553);
 
-      ctx.deleteMessage();
-      ctx.reply(reddit_jokes[random_index].title);
-
-      setTimeout(() => {
-        ctx.reply(reddit_jokes[random_index].body);
-      }, 3000);
+      await ctx.deleteMessage();
+      await ctx.reply(reddit_jokes[random_index].title);
+      await ctx.reply(reddit_jokes[random_index].body);
     });
 
-    bot.action(["stupid", "wocka"], (ctx) => {
-      ctx.answerCbQuery();
-      // console.log(ctx.match);
+    bot.action(["stupid", "wocka"], async (ctx) => {
+      await ctx.answerCbQuery(`Selected ${ctx.match[0] === "stupid"? ("Stupid Stuff"):("Wocka")}`);
+      console.log(ctx.match[0]);
       let random_index = Math.floor(
-        Math.random() * joke_providers.get(ctx.match).length
+        Math.random() * joke_providers.get(ctx.match[0]).length
       );
-
-      ctx.deleteMessage();
-      ctx.reply(joke_providers.get(ctx.match)[random_index].body);
+      await ctx.deleteMessage();
+      await ctx.reply(joke_providers.get(ctx.match[0])[random_index].body);
     });
   });
-
-  // bot.action(
-  //   ["Any", "Miscellaneous", "Dark", "Pun", "Spooky", "Christmas", "Programming"],
-  //   async (ctx) => {
-  //     ctx.answerCbQuery("Sending Joke");
-  //     let menu = ctx;
-  //     // console.log(ctx.match);
-
-  //     try {
-  //       response = await axios.get(process.env.JOKE_PROVIDER + ctx.match);
-  //       // handle success
-
-  //       if (response.data.type === "twopart") {
-  //         ctx.reply(response.data.setup);
-  //         // Pause the program for 1.5 seconds
-  //         setTimeout(function () {
-  //           ctx.reply(response.data.delivery);
-  //         }, 4000);
-  //       } else {
-  //         ctx.reply(response.data.joke);
-  //       }
-
-  //       menu.deleteMessage();
-  //       // console.log(response.data);
-  //       // console.log(response.data.type);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   }
-  //   );
 };
