@@ -16,29 +16,28 @@ bot.command("start", (ctx) => {
 });
 
 bot.action(["info"], (ctx) => {
-  ctx.answerCbQuery()
+  ctx.answerCbQuery();
   const custom_keyboard = [
-    [
-      { text: "Credits"},
-      { text: "API"},
-    ],
-    [
-      { text: "Remove Keyboard"},
-    ],
+    [{ text: "Credits" }, { text: "API" }],
+    [{ text: "Remove Keyboard" }],
   ];
   ctx.reply("Bot Info", {
-    reply_markup: { keyboard: custom_keyboard ,resize_keyboard: true,one_time_keyboard:true}, 
+    reply_markup: {
+      keyboard: custom_keyboard,
+      resize_keyboard: true,
+      one_time_keyboard: true,
+    },
   });
 });
-bot.hears("Credits", (ctx => {
-  ctx.reply(`Bot was made by @dododoyo`)
-}))
-bot.hears("API", (ctx => {
-  ctx.reply(`This bot uses cryptocompare API`)
-}))
-bot.hears("Remove Keyboard", (ctx => {
-  ctx.reply(`Removed Keyboard`,{reply_markup:{remove_keyboard:true}})
-}))
+bot.hears("Credits", (ctx) => {
+  ctx.reply(`Bot was made by @dododoyo`);
+});
+bot.hears("API", (ctx) => {
+  ctx.reply(`This bot uses cryptocompare API`);
+});
+bot.hears("Remove Keyboard", (ctx) => {
+  ctx.reply(`Removed Keyboard`, { reply_markup: { remove_keyboard: true } });
+});
 
 const get_name = (abrv) => {
   let name = "";
