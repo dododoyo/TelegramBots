@@ -1,13 +1,15 @@
 const { Scenes } = require("telegraf");
+const { users } = require("../data/config");
 
 const displayRating = async (index, ctx, first) => {
   const group_data = ctx.session.group_data;
-  // console.log(group_data);
+  // console.log(users);
+  console.log(group_data[index].handle);
   const last_index = group_data.length - 1;
 
   if (first) {
     await ctx.reply(
-      `[${group_data[index].handle}](https://codeforces.com/profile/${
+      `[${users[group_data[index].handle]}](https://codeforces.com/profile/${
         group_data[index].handle
       })
 
@@ -17,7 +19,7 @@ __Rank from Group__ : ${index + 1}
 __Maximum Rating__ : ${group_data[index].maxRating || "Not rated"}`,
       {
         parse_mode: "MarkdownV2",
-        show_above_text:true,
+        show_above_text: true,
         reply_markup: {
           inline_keyboard: [
             [
