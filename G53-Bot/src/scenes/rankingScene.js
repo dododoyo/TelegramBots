@@ -3,7 +3,7 @@ const { users } = require("../data/config");
 
 const displayRanking = async (index, ctx, first) => {
   const group_data = ctx.session.group_data;
-  const last_index = group_data.length - 1;
+  const last_index = group_data?.length - 1;
   const rankMessage = [];
 
   for (let i = index; i < index + 5; i++) {
@@ -42,6 +42,10 @@ const displayRanking = async (index, ctx, first) => {
     } catch (error) {
       console.log("Something went wrong when replying to user");
       console.log(error);
+      try {
+        await ctx.reply("Something went wrong when displaying data")
+      } catch (error) {
+      }
     }
   } else if (index === last_index - 4) {
     try {
@@ -70,6 +74,10 @@ const displayRanking = async (index, ctx, first) => {
     } catch (error) {
       console.log("Something went wrong when replying to user");
       console.log(error);
+      try {
+        await ctx.reply("Something went wrong when displaying data")
+      } catch (error) {
+      }
     }
   } else {
     try {
@@ -101,7 +109,13 @@ const displayRanking = async (index, ctx, first) => {
         },
       });
     } catch (error) {
-      console.log("Something went wrong when replying to user");
+
+      try {
+        await ctx.reply("Something went wrong when displaying data")
+      } catch (error) {
+        console.log("Something went wrong when replying to user");  
+        console.log(error.message)
+      }
       console.log(error);
     }
   }
@@ -134,7 +148,12 @@ RankingScene.action(["prev", "next"], async (ctx) => {
 });
 
 RankingScene.action(["back"], async (ctx) => {
-  await ctx.deleteMessage();
+  try {
+    
+    await ctx.deleteMessage();
+  } catch (error) {
+    
+  }
   return ctx.scene.leave();
 });
 

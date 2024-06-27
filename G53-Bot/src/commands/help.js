@@ -1,7 +1,11 @@
 const {help_message} = require("../data/config.js")
 module.exports = (bot) => {
   bot.command(["help"], async (ctx) => {
-
-    await ctx.reply(help_message);
+    try {
+      await ctx.reply(help_message);
+    } catch (error) {
+      console.log("Something went wrong when replying to user");  
+      console.log(error.message)
+    }
   });
 };

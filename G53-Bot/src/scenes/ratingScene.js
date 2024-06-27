@@ -3,11 +3,11 @@ const { users } = require("../data/config");
 
 const displayRating = async (index, ctx, first) => {
   const group_data = ctx.session.group_data;
-  // console.log(users);
-  console.log(group_data[index].handle);
-  const last_index = group_data.length - 1;
+  const last_index = group_data?.length - 1;
 
   if (first) {
+    try {
+
     await ctx.reply(
       `[${users[group_data[index].handle]}](https://codeforces.com/profile/${
         group_data[index].handle
@@ -38,6 +38,10 @@ __Maximum Rating__ : ${group_data[index].maxRating || "Not rated"}`,
         },
       }
     );
+  } catch (error) {
+      
+  }
+
   } else if (index == last_index) {
     await ctx.editMessageText(
       `[${group_data[index].handle}](https://codeforces.com/profile/${
