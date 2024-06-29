@@ -41,4 +41,4 @@ const users = {
   yayne30: "Eyerusalem Abate Tegegn",
 };
 
-module.exports = { help_message, users };
+export { help_message, users };

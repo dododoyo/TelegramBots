@@ -1,7 +1,24 @@
-const { Scenes } = require("telegraf");
+import { Scenes, session, Telegraf, Composer, Context } from "telegraf";
+import { Update } from "telegraf/typings/core/types/typegram";
+
+import { BaseScene } from "telegraf/scenes";
 const { users } = require("../data/config");
 
-const displayRanking = async (index, ctx, first) => {
+interface MySession extends Scenes.SceneSession {
+  group_data: any;
+  current_index: number;
+}
+
+interface MyContext extends Context {
+  session: MySession;
+  scene: Scenes.SceneContextScene<MyContext>;
+}
+
+const displayRanking = async (
+  index: number,
+  ctx: MyContext,
+  first: Boolean
+) => {
   const group_data = ctx.session.group_data;
   const last_index = group_data?.length - 1;
   const rankMessage = [];
@@ -21,7 +38,6 @@ const displayRanking = async (index, ctx, first) => {
     try {
       await ctx.reply(rankMessageString, {
         parse_mode: "MarkdownV2",
-        show_above_text: true,
         reply_markup: {
           inline_keyboard: [
             [
@@ -43,9 +59,8 @@ const displayRanking = async (index, ctx, first) => {
       console.log("Something went wrong when replying to user");
       console.log(error);
       try {
-        await ctx.reply("Something went wrong when displaying data")
-      } catch (error) {
-      }
+        await ctx.reply("Something went wrong when displaying data");
+      } catch (error) {}
     }
   } else if (index === last_index - 4) {
     try {
@@ -58,7 +73,6 @@ const displayRanking = async (index, ctx, first) => {
                 text: `<<${index === 0 ? 5 : index - 4} - ${
                   index === 0 ? 1 : index
                 }`,
-                callback_data: "prev",
                 callback_data: "prev",
               },
             ],
@@ -75,9 +89,8 @@ const displayRanking = async (index, ctx, first) => {
       console.log("Something went wrong when replying to user");
       console.log(error);
       try {
-        await ctx.reply("Something went wrong when displaying data")
-      } catch (error) {
-      }
+        await ctx.reply("Something went wrong when displaying data");
+      } catch (error) {}
     }
   } else {
     try {
@@ -108,13 +121,12 @@ const displayRanking = async (index, ctx, first) => {
           ],
         },
       });
-    } catch (error) {
-
+    } catch (error: any) {
       try {
-        await ctx.reply("Something went wrong when displaying data")
-      } catch (error) {
-        console.log("Something went wrong when replying to user");  
-        console.log(error.message)
+        await ctx.reply("Something went wrong when displaying data");
+      } catch (error: any) {
+        console.log("Something went wrong when replying to user");
+        console.log(error.message);
       }
       console.log(error);
     }
@@ -128,16 +140,16 @@ const displayRanking = async (index, ctx, first) => {
  * @name RankingScene
  */
 
-const RankingScene = new Scenes.BaseScene("RANKING_SCENE");
+const RankingScene = new Scenes.BaseScene<MyContext>("RANKING_SCENE");
 
-RankingScene.enter(async (ctx) => {
+RankingScene.enter(async (ctx: MyContext) => {
   displayRanking(0, ctx, true);
   ctx.session.current_index = 0;
 });
 
 RankingScene.action(["prev", "next"], async (ctx) => {
   let index = ctx.session.current_index;
-
+  // console.log(ctx.match[0]);
   if (ctx.match[0] === "prev") {
     index = Math.max(index - 5, 0);
   } else if (ctx.match[0] === "next") {
@@ -149,12 +161,9 @@ RankingScene.action(["prev", "next"], async (ctx) => {
 
 RankingScene.action(["back"], async (ctx) => {
   try {
-    
     await ctx.deleteMessage();
-  } catch (error) {
-    
-  }
+  } catch (error: any) {}
   return ctx.scene.leave();
 });
 
-module.exports = RankingScene;
+export { RankingScene };

@@ -1,7 +1,23 @@
-const axios = require("axios");
-const crypto = require("crypto");
-module.exports = async (bot) => {
-  bot.command(["rank"], async (ctx) => {
+import { Context, Composer, Telegraf, Scenes } from "telegraf";
+import axios, {
+  AxiosResponse,
+  AxiosRequestConfig,
+  RawAxiosRequestHeaders,
+} from "axios";
+import * as crypto from "crypto";
+
+interface MySession extends Scenes.SceneSession {
+  group_data: any;
+  current_index: number;
+}
+
+interface MyContext extends Context {
+  session: MySession;
+  scene: Scenes.SceneContextScene<MyContext>;
+}
+
+const rank_command = (bot: Telegraf<MyContext>) => {
+  bot.command(["rank"], async (ctx: MyContext) => {
     try {
       const currentTime = String(Math.floor(new Date().getTime() / 1000));
       const randomNumber = Math.floor(100000 + Math.random() * 900000);
@@ -12,7 +28,10 @@ module.exports = async (bot) => {
         time: currentTime,
       };
       const sortedParamString = Object.entries(params)
-        .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
+        .sort(
+          (a: any, b: any) =>
+            a[0].localeCompare(b[0]) || a[1].localeCompare(b[1])
+        )
         .map(([key, value]) => `${key}=${value}`)
         .join("&");
       const stringToHash = `${randomNumber}/user.info?${sortedParamString}#${process.env.API_SECRET}`;
@@ -27,26 +46,26 @@ module.exports = async (bot) => {
       const response = await axios(requestURL);
       if (response.data.status === "OK") {
         const data = response.data.result;
-        data.sort((a, b) => {
+        data.sort((a: any, b: any) => {
           if (!a.rating) return 1;
           if (!b.rating) return -1;
           return b.rating - a.rating;
         });
         ctx.session.group_data = data;
+        ctx.session ??= { group_data: data, current_index: 0 };
         await ctx.scene.enter("RANKING_SCENE");
       } else {
         try {
           await ctx.reply("Something went wrong when fetching data");
-        } catch (error) {
+        } catch (error: any) {
           console.log("Something went wrong when replying to user");
           console.log(error.message);
         }
       }
-      // console.log(response.data);
-    } catch (error) {
+    } catch (error: any) {
       try {
-        await ctx.reply("Something went wrong when fetching data");
-      } catch (error) {
+        await ctx.reply("Something went wrong when displaying data");
+      } catch (error: any) {
         console.log("Something went wrong when replying to user");
         console.log(error.message);
       }
@@ -55,3 +74,5 @@ module.exports = async (bot) => {
     }
   });
 };
+
+export { rank_command };
