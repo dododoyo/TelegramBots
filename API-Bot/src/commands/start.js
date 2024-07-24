@@ -1,11 +1,9 @@
-module.exports = (bot) => { 
+module.exports = (bot) => {
+  bot.command(["Start", "start"], async (ctx) => {
+    const user = ctx.from.username || ctx.from.first_name || "user";
+    const message = `Hello @${user}, Welcome!
 
-  bot.command(["Start","start"],async (ctx) => {
-    const user = ctx.from.username || ctx.from.first_name;
-    const message = `
-Hello @${user}, welcome! How can I assist you?
-
-Use /help for more information`;
+Use /help for more info 🤖`;
     await ctx.reply(message);
   });
-}
+};
